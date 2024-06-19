@@ -33,7 +33,7 @@ const canvas = document.querySelector("canvas.webgl");
 
 // Raycaster: Look it up
 const raycaster = new THREE.Raycaster();
-raycaster.params.Points.threshold = 0.1
+raycaster.params.Points.threshold = 0.1;
 const pointer = new THREE.Vector2();
 
 // Constants for the canvas area dimensions.
@@ -75,6 +75,8 @@ axesHelper.visible = false;
 const debugFolder = gui.addFolder("Debugging Options");
 debugFolder.add(axesHelper, "visible").name("Show Axes Helper");
 
+debugFolder.add(debugObject, "rotation").name("Rotate");
+
 scene.add(axesHelper);
 
 // -----------------------------------------------------------------------------
@@ -104,9 +106,9 @@ function generatePointsGeometry() {
       const y = Math.sin(x / 5) + Math.cos(z / 5);
 
       // Deducting by  width/4 and depth/4 to center the points about the origin.
-      vertices[3 * pointCount] = x - width/4;
+      vertices[3 * pointCount] = x - width / 4;
       vertices[3 * pointCount + 1] = y * debugObject.waveAmplitude;
-      vertices[3 * pointCount + 2] = z - depth/4;
+      vertices[3 * pointCount + 2] = z - depth / 4;
 
       // To assign colors, dividing the points on the X-axis(width) into three and
       // assigning red, green, blue depending on which section the point is on.
@@ -163,7 +165,7 @@ pointsDebugFolder
     points.geometry = generatePointsGeometry();
   });
 
-  pointsDebugFolder
+pointsDebugFolder
   .add(debugObject, "depth")
   .min(1)
   .max(800)
@@ -183,16 +185,31 @@ pointsDebugFolder
 // }
 // renderer.setAnimationLoop(animate);
 
+const mousePoint = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 4, 4),
+  new THREE.MeshBasicMaterial({ color: 0xff0000 })
+);
+scene.add(mousePoint);
+
 function tick() {
   const elapsedTime = clock.getElapsedTime();
+
+  // Mouse Pointer
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObjects([points]);
+
+  if (intersects.length > 0) {
+    const intersect = intersects[0];
+    const point = intersect.point;
+    mousePoint.position.set(point.x, point.y, point.z);
+  }
 
   // Update controls
   controls.update();
 
   // Rotation
   // points.rotation.y = elapsedTime * 0.15;
-  controls.autoRotate = true
-
+  controls.autoRotate = debugObject.rotation;
 
   // Render the scene.
   renderer.render(scene, camera);
@@ -205,16 +222,15 @@ function tick() {
 function onPointerMove(event) {
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  handleMouseOver();
+  // handleMouseOver();
 }
 
 function handleMouseOver() {
   // raycaster.setFromCamera(pointer, camera);
-  // const intersects = raycaster.intersectObjects(scene.children);
-  // if (intersects.length > 0) {
-  //   console.log(intersects);
-    
+  // const intersects = raycaster.intersectObjects([points], false);
+  // if (intersects.length > 0){
+  //   const intersect = intersects[0];
+  //   mousePoint.position.set(intersect.point.x, intersect.point.y, intersect.point.z);
   // }
 }
 
